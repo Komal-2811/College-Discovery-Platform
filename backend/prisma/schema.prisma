@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model College {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String    @unique
+  location      String
+  state         String
+  city          String
+  fees          Int       // Annual fees in INR
+  rating        Float     @default(4.0)
+  reviewCount   Int       @default(0)
+  description   String?
+  image         String?
+  founded       Int?
+  affiliatedTo  String?
+  
+  // Relations
+  courses       Course[]
+  placements    Placement[]
+  reviews       Review[]
+  comparisons   ComparisonCollege[]
+  predictorMatches PredictorMatch[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([location])
+  @@index([fees])
+  @@index([rating])
+}
+
+model Course {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  duration      String    // e.g., "4 years"
+  specialization String?   // e.g., "CSE", "ECE"
+  collegeId     String    @db.ObjectId
+  college       College   @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([collegeId])
+}
+
+model Placement {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  year              Int       // e.g., 2024
+  placementPercent  Float     // e.g., 95.5
+  avgPackage        Float     // in LPA (Lakhs Per Annum)
+  highestPackage    Float?    // in LPA
+  topRecruiter      String?   // e.g., "Google"
+  collegeId         String    @db.ObjectId
+  college           College   @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([collegeId])
+}
+
+model Review {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  rating        Int       // 1-5
+  title         String
+  content       String
+  author        String    // Anonymous or named
+  collegeId     String    @db.ObjectId
+  college       College   @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([collegeId])
+}
+
+model Comparison {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String?   // For saved comparisons (optional)
+  name              String?   // Custom name for comparison
+  colleges          ComparisonCollege[]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model ComparisonCollege {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  comparisonId  String    @db.ObjectId
+  comparison    Comparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  collegeId     String    @db.ObjectId
+  college       College   @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  @@unique([comparisonId, collegeId])
+  @@index([comparisonId])
+  @@index([collegeId])
+}
+
+model PredictorMatch {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  exam          String    // e.g., "JEE", "NEET"
+  minRank       Int
+  maxRank       Int
+  collegeId     String    @db.ObjectId
+  college       College   @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([exam])
+  @@index([collegeId])
+}
