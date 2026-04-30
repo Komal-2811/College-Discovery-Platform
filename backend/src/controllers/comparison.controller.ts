@@ -17,9 +17,11 @@ export const createComparison = async (req: Request, res: Response) => {
       data: {
         name: name || `Comparison ${new Date().toLocaleDateString()}`,
         colleges: {
-          create: collegeIds.map((id: number) => ({
-            collegeId: id
-          }))
+colleges: {
+  create: collegeIds.map((id: number) => ({
+    collegeId: id
+  }))
+}
         }
       },
       include: {
